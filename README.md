@@ -26,7 +26,7 @@ npx blockish-mcp-cli
 2. **Site URL:** Enter the base URL of your WordPress site (e.g., `https://mysite.com`).
 3. **WordPress username:** Enter your WordPress username.
 4. **Application password:** Provide an Application Password for your WordPress user.
-   > **Note:** To create an Application Password, log in to WordPress, go to **Users → Profile**, scroll down to the bottom, and generate a new Application Password.
+   > **Note:** To create an Application Password, click your user avatar in the top right corner of your WordPress dashboard, scroll to the bottom, and create an Application Password. You can also view the guide here: https://blockish.dev/app-password
 5. **Custom server URL override (Optional):** By default, the CLI connects to the standard default server path (`/wp-json/mcp/mcp-adapter-default-server`). You can override this if your setup requires a custom endpoint.
 
 ## Security Warning
