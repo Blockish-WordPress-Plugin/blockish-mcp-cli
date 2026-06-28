@@ -6,6 +6,7 @@ import { configureCursor } from './clients/cursor.js';
 import { configureAntigravity } from './clients/antigravity.js';
 import { configureClaudeCode } from './clients/claude-code.js';
 import { configureCodex } from './clients/codex.js';
+import { configureChatGPT } from './clients/chatgpt.js';
 
 async function main() {
   p.intro('Blockish MCP Server Configuration');
@@ -33,6 +34,9 @@ async function main() {
       break;
     case 'codex':
       await configureCodex(mcpConfig);
+      break;
+    case 'chatgpt':
+      await configureChatGPT(mcpConfig);
       break;
     default:
       p.cancel('Unknown tool selected.');

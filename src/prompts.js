@@ -8,6 +8,7 @@ export async function askForTool() {
       { value: 'claude-code', label: 'Claude Code' },
       { value: 'cursor', label: 'Cursor' },
       { value: 'codex', label: 'Codex' },
+      { value: 'chatgpt', label: 'ChatGPT Desktop' },
       { value: 'antigravity-ide', label: 'Antigravity IDE' },
       { value: 'antigravity-cli', label: 'Antigravity CLI' },
     ],
