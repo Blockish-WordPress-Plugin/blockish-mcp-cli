@@ -1,5 +1,5 @@
 {
-  "name": "@wowdevs/blockish-mcp",
+  "name": "blockish-mcp-cli",
   "version": "1.0.0",
   "description": "Blockish MCP Server Configuration CLI",
   "main": "src/index.js",
@@ -9,7 +9,7 @@
     "src"
   ],
   "bin": {
-    "blockish-mcp": "./bin/blockish-mcp.js"
+    "blockish-mcp-cli": "./bin/blockish-mcp.js"
   },
   "scripts": {
     "start": "node ./bin/blockish-mcp.js"
