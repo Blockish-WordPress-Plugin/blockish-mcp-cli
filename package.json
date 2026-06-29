@@ -1,6 +1,6 @@
 {
   "name": "blockish-mcp-cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Blockish MCP Server Configuration CLI",
   "main": "src/index.js",
   "type": "module",
