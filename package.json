@@ -9,7 +9,7 @@
     "src"
   ],
   "bin": {
-    "blockish-mcp-cli": "./bin/blockish-mcp.js"
+    "blockish-mcp-cli": "bin/blockish-mcp.js"
   },
   "scripts": {
     "start": "node ./bin/blockish-mcp.js"
