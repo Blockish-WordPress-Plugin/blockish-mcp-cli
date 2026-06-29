@@ -115,5 +115,5 @@ export async function askForSiteDetails() {
     endpointUrl = customUrl;
   }
 
-  return { endpointUrl, username, password: password.replace(/\\s+/g, '') };
+  return { endpointUrl, username, password: password.replace(/\s+/g, '') };
 }
