@@ -21,7 +21,7 @@ export async function configureClaudeCode(mcpConfig) {
 
     spinner.stop('Configuration successful');
     p.note('Your application password is stored in your Claude Code config.\nTreat it as a secret.', 'Security Warning');
-    p.outro('Please fully restart Claude Code to load the new tools.');
+    p.outro('Done! Updated config: ~/.claude.json\nPlease fully restart Claude Code to load the new tools.');
   } catch (err) {
     spinner.stop('Failed to configure automatically');
     if (err.code === 'ENOENT' || err.message.includes('not found')) {

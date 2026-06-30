@@ -87,8 +87,10 @@ export async function askForSiteDetails() {
     process.exit(0);
   }
 
+  let endpointUrl = `${cleanSiteUrl}/wp-json/mcp/mcp-adapter-default-server`;
+
   const advanced = await p.confirm({
-    message: 'Do you want to provide a custom server URL override? (Default is standard Blockish/MCP path)',
+    message: 'Do you want to provide a custom server URL override? (Required if using Plain Permalinks)',
     initialValue: false,
   });
 
@@ -97,9 +99,9 @@ export async function askForSiteDetails() {
     process.exit(0);
   }
 
-  let endpointUrl = `${cleanSiteUrl}/wp-json/mcp/mcp-adapter-default-server`;
-
   if (advanced) {
+    p.note(`If your site uses "Plain" permalinks, the default URL will fail.\nExample format for plain permalinks:\n${cleanSiteUrl}/?rest_route=/mcp/mcp-adapter-default-server`, 'Plain Permalink Warning');
+    
     const customUrl = await p.text({
       message: 'Custom server URL',
       placeholder: endpointUrl,

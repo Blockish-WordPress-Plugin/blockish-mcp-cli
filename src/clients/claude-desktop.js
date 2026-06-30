@@ -59,8 +59,10 @@ export async function configureClaudeDesktop(mcpConfig) {
     await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2), 'utf8');
 
     spinner.stop('Configuration successful');
-    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${configPath}`, 'Security Warning');
-    p.outro('Please fully restart Claude Desktop to load the new tools.');
+    const { pathToFileURL } = await import('node:url');
+    const displayPath = pathToFileURL(configPath).href;
+    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
+    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Claude Desktop to load the new tools.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

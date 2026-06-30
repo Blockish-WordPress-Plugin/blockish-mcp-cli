@@ -8,8 +8,16 @@ import { configureClaudeCode } from './clients/claude-code.js';
 import { configureCodex } from './clients/codex.js';
 import { configureChatGPT } from './clients/chatgpt.js';
 
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkgPath = path.join(__dirname, '../package.json');
+const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8'));
+
 async function main() {
-  p.intro('Blockish MCP Server Configuration');
+  p.intro(`Blockish MCP Server Configuration v${pkg.version}`);
 
   const { tool, cursorLevel } = await askForTool();
   const { endpointUrl, username, password } = await askForSiteDetails();
