@@ -3,10 +3,18 @@ import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
 
-export async function configureAntigravity(mcpConfig, clientType) {
-  const isIde = clientType === 'ide';
-  const name = isIde ? 'Antigravity IDE' : 'Antigravity CLI';
-  const dirName = isIde ? 'antigravity-ide' : 'antigravity';
+export async function configureAntigravity(mcpConfig, clientType, options = {}) {
+  let name, dirName;
+  if (clientType === 'ide') {
+    name = 'Antigravity IDE';
+    dirName = 'antigravity-ide';
+  } else if (clientType === 'cli') {
+    name = 'Antigravity CLI';
+    dirName = 'config';
+  } else if (clientType === 'chat') {
+    name = 'Antigravity Chat';
+    dirName = 'antigravity';
+  }
 
   const spinner = p.spinner();
   spinner.start(`Configuring ${name}`);
@@ -36,16 +44,18 @@ export async function configureAntigravity(mcpConfig, clientType) {
     }
 
     if (existingConfig.mcpServers.blockish) {
-      spinner.stop('Conflict');
-      const overwrite = await p.confirm({
-        message: 'A "blockish" MCP server already exists in your config. Overwrite?',
-        initialValue: false,
-      });
-      if (p.isCancel(overwrite) || !overwrite) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
+      if (!options.force) {
+        spinner.stop('Conflict');
+        const overwrite = await p.confirm({
+          message: 'A "blockish" MCP server already exists in your config. Overwrite?',
+          initialValue: false,
+        });
+        if (p.isCancel(overwrite) || !overwrite) {
+          p.cancel('Operation cancelled.');
+          process.exit(0);
+        }
+              spinner.start('Updating config');
       }
-      spinner.start('Updating config');
     }
 
     existingConfig.mcpServers.blockish = mcpConfig;

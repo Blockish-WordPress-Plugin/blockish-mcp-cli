@@ -3,17 +3,12 @@ import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
 
-export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
+export async function configureZed(mcpConfig, options = {}) {
   const spinner = p.spinner();
-  spinner.start('Configuring Cursor');
+  spinner.start('Configuring Zed');
 
   try {
-    let configPath;
-    if (cursorLevel === 'global') {
-      configPath = path.join(os.homedir(), '.cursor', 'mcp.json');
-    } else {
-      configPath = path.join(process.cwd(), '.cursor', 'mcp.json');
-    }
+    const configPath = path.join(os.homedir(), '.config', 'zed', 'settings.json');
 
     const configDir = path.dirname(configPath);
     await fs.mkdir(configDir, { recursive: true });
@@ -22,25 +17,27 @@ export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
     try {
       const fileContent = await fs.readFile(configPath, 'utf8');
       if (fileContent.trim() !== '') {
-        existingConfig = JSON.parse(fileContent);
+        // Strip out single-line and multi-line comments for JSON parsing
+        const stripped = fileContent.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+        existingConfig = JSON.parse(stripped);
       }
     } catch (err) {
       if (err.code !== 'ENOENT') {
         spinner.stop('Error reading config file');
-        p.cancel(`Failed to parse existing config at ${configPath}. Is it valid JSON? Error: ${err.message}`);
+        p.cancel(`Failed to parse existing config at ${configPath}. Please ensure it is valid JSON. Error: ${err.message}`);
         process.exit(1);
       }
     }
 
-    if (!existingConfig.mcpServers) {
-      existingConfig.mcpServers = {};
+    if (!existingConfig.context_servers) {
+      existingConfig.context_servers = {};
     }
 
-    if (existingConfig.mcpServers.blockish) {
+    if (existingConfig.context_servers.blockish) {
       if (!options.force) {
         spinner.stop('Conflict');
         const overwrite = await p.confirm({
-          message: 'A "blockish" MCP server already exists in your config. Overwrite?',
+          message: 'A "blockish" MCP server already exists in Zed. Overwrite?',
           initialValue: false,
         });
         if (p.isCancel(overwrite) || !overwrite) {
@@ -51,15 +48,14 @@ export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
       }
     }
 
-    existingConfig.mcpServers.blockish = mcpConfig;
+    existingConfig.context_servers.blockish = mcpConfig;
 
     await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2), 'utf8');
 
     spinner.stop('Configuration successful');
     const { pathToFileURL } = await import('node:url');
     const displayPath = pathToFileURL(configPath).href;
-    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
-    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Cursor to load the new tools.`);
+    p.outro(`Done! Updated Zed config: ${displayPath}\nPlease fully restart Zed.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

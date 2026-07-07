@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import * as p from '@clack/prompts';
 
-export async function configureClaudeCode(mcpConfig) {
+export async function configureClaudeCode(mcpConfig, options = {}) {
   const spinner = p.spinner();
   spinner.start('Configuring Claude Code');
 

@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts';
 
-export async function configureChatGPT(mcpConfig) {
+export async function configureChatGPT(mcpConfig, options = {}) {
   const spinner = p.spinner();
   spinner.start('Preparing ChatGPT configuration');
   spinner.stop('Ready for manual setup');

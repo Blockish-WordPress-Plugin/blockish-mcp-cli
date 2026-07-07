@@ -2,18 +2,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
+import yaml from 'yaml';
 
-export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
+export async function configureContinue(mcpConfig, options = {}) {
   const spinner = p.spinner();
-  spinner.start('Configuring Cursor');
+  spinner.start('Configuring Continue.dev');
 
   try {
-    let configPath;
-    if (cursorLevel === 'global') {
-      configPath = path.join(os.homedir(), '.cursor', 'mcp.json');
-    } else {
-      configPath = path.join(process.cwd(), '.cursor', 'mcp.json');
-    }
+    const homedir = os.homedir();
+    const configPath = path.join(homedir, '.continue', 'config.yaml');
 
     const configDir = path.dirname(configPath);
     await fs.mkdir(configDir, { recursive: true });
@@ -22,44 +19,47 @@ export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
     try {
       const fileContent = await fs.readFile(configPath, 'utf8');
       if (fileContent.trim() !== '') {
-        existingConfig = JSON.parse(fileContent);
+        existingConfig = yaml.parse(fileContent);
       }
     } catch (err) {
       if (err.code !== 'ENOENT') {
         spinner.stop('Error reading config file');
-        p.cancel(`Failed to parse existing config at ${configPath}. Is it valid JSON? Error: ${err.message}`);
+        p.cancel(`Failed to parse existing config at ${configPath}. Error: ${err.message}`);
         process.exit(1);
       }
     }
 
     if (!existingConfig.mcpServers) {
-      existingConfig.mcpServers = {};
+      existingConfig.mcpServers = [];
     }
 
-    if (existingConfig.mcpServers.blockish) {
+    // Continue uses an array for mcpServers
+    const existingIndex = existingConfig.mcpServers.findIndex(s => s.name === 'blockish');
+
+    if (existingIndex !== -1) {
       if (!options.force) {
         spinner.stop('Conflict');
         const overwrite = await p.confirm({
-          message: 'A "blockish" MCP server already exists in your config. Overwrite?',
+          message: 'A "blockish" MCP server already exists in Continue.dev. Overwrite?',
           initialValue: false,
         });
         if (p.isCancel(overwrite) || !overwrite) {
           p.cancel('Operation cancelled.');
           process.exit(0);
         }
-              spinner.start('Updating config');
-      }
+        spinner.start('Updating config');
+              }
+      existingConfig.mcpServers[existingIndex] = { name: 'blockish', ...mcpConfig };
+    } else {
+      existingConfig.mcpServers.push({ name: 'blockish', ...mcpConfig });
     }
 
-    existingConfig.mcpServers.blockish = mcpConfig;
-
-    await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2), 'utf8');
+    await fs.writeFile(configPath, yaml.stringify(existingConfig), 'utf8');
 
     spinner.stop('Configuration successful');
     const { pathToFileURL } = await import('node:url');
     const displayPath = pathToFileURL(configPath).href;
-    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
-    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Cursor to load the new tools.`);
+    p.outro(`Done! Updated Continue config: ${displayPath}\nPlease restart Continue agent to load the new tools.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

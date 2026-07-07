@@ -1,24 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
 import * as p from '@clack/prompts';
+import { getVSCodeConfigDir } from '../utils/paths.js';
 
-export async function configureClaudeDesktop(mcpConfig, options = {}) {
+export async function configureCline(mcpConfig, options = {}) {
   const spinner = p.spinner();
-  spinner.start('Configuring Claude Desktop');
+  spinner.start('Configuring Cline (VS Code)');
 
   try {
-    let configPath;
-    const platform = process.platform;
-    const homedir = os.homedir();
-
-    if (platform === 'darwin') {
-      configPath = path.join(homedir, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
-    } else if (platform === 'win32') {
-      configPath = path.join(process.env.APPDATA || path.join(homedir, 'AppData', 'Roaming'), 'Claude', 'claude_desktop_config.json');
-    } else {
-      configPath = path.join(homedir, '.config', 'Claude', 'claude_desktop_config.json');
-    }
+    const vscodeDir = getVSCodeConfigDir();
+    const configPath = path.join(vscodeDir, 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
 
     const configDir = path.dirname(configPath);
     await fs.mkdir(configDir, { recursive: true });
@@ -32,7 +23,7 @@ export async function configureClaudeDesktop(mcpConfig, options = {}) {
     } catch (err) {
       if (err.code !== 'ENOENT') {
         spinner.stop('Error reading config file');
-        p.cancel(`Failed to parse existing config at ${configPath}. Is it valid JSON? Error: ${err.message}`);
+        p.cancel(`Failed to parse existing config at ${configPath}. Error: ${err.message}`);
         process.exit(1);
       }
     }
@@ -45,7 +36,7 @@ export async function configureClaudeDesktop(mcpConfig, options = {}) {
       if (!options.force) {
         spinner.stop('Conflict');
         const overwrite = await p.confirm({
-          message: 'A "blockish" MCP server already exists in your config. Overwrite?',
+          message: 'A "blockish" MCP server already exists in Cline. Overwrite?',
           initialValue: false,
         });
         if (p.isCancel(overwrite) || !overwrite) {
@@ -63,8 +54,7 @@ export async function configureClaudeDesktop(mcpConfig, options = {}) {
     spinner.stop('Configuration successful');
     const { pathToFileURL } = await import('node:url');
     const displayPath = pathToFileURL(configPath).href;
-    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
-    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Claude Desktop to load the new tools.`);
+    p.outro(`Done! Updated Cline config: ${displayPath}\nPlease fully restart VS Code.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

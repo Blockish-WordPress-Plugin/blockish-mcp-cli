@@ -8,8 +8,13 @@ This tool interactively collects your WordPress connection details and automatic
 
 - **Claude Desktop**
 - **Cursor** (Global or Project-level)
-- **Antigravity IDE**
-- **Antigravity CLI**
+- **Windsurf IDE**
+- **Zed Editor**
+- **Cline** (VS Code)
+- **Continue.dev**
+- **Sourcegraph Cody**
+- **Goose**
+- **Antigravity IDE** / **CLI** / **Chat**
 - **Claude Code**
 - **Codex**
 - **ChatGPT Desktop**
@@ -29,6 +34,25 @@ npx blockish-mcp-cli
 4. **Application password:** Provide an Application Password for your WordPress user.
    > **Note:** To create an Application Password, click your user avatar in the top right corner of your WordPress dashboard, scroll to the bottom, and create an Application Password.
 5. **Custom server URL override (Optional):** By default, the CLI connects to the standard default server path (`/wp-json/mcp/mcp-adapter-default-server`). You can override this if your setup requires a custom endpoint.
+
+### Non-Interactive (Automation) Mode
+
+You can completely bypass the interactive prompts by passing your details via command-line flags. This is perfect for CI/CD pipelines or automated setup scripts.
+
+| Flag | Full Name | Description |
+| :--- | :--- | :--- |
+| `-t` | `--tool` | The AI client identifier (e.g., `cline`, `windsurf`, `cursor`, `zed`, `goose`, `continue`, `cody`) |
+| `-s` | `--siteUrl` | The base URL of your WordPress site |
+| `-u` | `--username` | Your WordPress username |
+| `-p` | `--password` | Your Application Password |
+| `-c` | `--customUrl` | Optional custom endpoint URL override |
+| `-f` | `--force` | Skip the "Overwrite?" confirmation if a configuration already exists |
+| | `--cursor-level` | `global` or `project` (Used only when `-t cursor` is selected) |
+
+**Example:**
+```bash
+npx blockish-mcp-cli -t cline -s https://example.com -u admin -p "secretpass123" --force
+```
 
 ## Security Warning
 

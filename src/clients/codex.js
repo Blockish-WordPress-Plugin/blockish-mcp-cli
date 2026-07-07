@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import * as p from '@clack/prompts';
 
-export async function configureCodex(mcpConfig) {
+export async function configureCodex(mcpConfig, options = {}) {
   const spinner = p.spinner();
   spinner.start('Configuring Codex');
 
