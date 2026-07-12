@@ -34,16 +34,18 @@ export async function configureCody(mcpConfig, options = {}) {
     }
 
     if (existingConfig['cody.mcpServers'].blockish) {
-      spinner.stop('Conflict');
-      const overwrite = await p.confirm({
-        message: 'A "blockish" MCP server already exists in Cody. Overwrite?',
-        initialValue: false,
-      });
-      if (p.isCancel(overwrite) || !overwrite) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
+      if (!options.force) {
+        spinner.stop('Conflict');
+        const overwrite = await p.confirm({
+          message: 'A "blockish" MCP server already exists in Cody. Overwrite?',
+          initialValue: false,
+        });
+        if (p.isCancel(overwrite) || !overwrite) {
+          p.cancel('Operation cancelled.');
+          process.exit(0);
+        }
+        spinner.start('Updating config');
       }
-      spinner.start('Updating config');
     }
 
     existingConfig['cody.mcpServers'].blockish = mcpConfig;
