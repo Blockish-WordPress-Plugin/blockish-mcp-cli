@@ -41,6 +41,17 @@ async function main() {
   const { tool, cursorLevel } = await askForTool(values);
   const { endpointUrl, username, password } = await askForSiteDetails(values);
   
+  const spinner = p.spinner();
+  spinner.start('Setting up Puppeteer for browser automation (downloading Chromium)...');
+  try {
+    const { execa } = await import('execa');
+    // Ensure Puppeteer and Chrome binaries are installed globally on the user's machine
+    await execa('npm', ['install', '-g', 'puppeteer'], { stdio: 'ignore' });
+    spinner.stop('Puppeteer and Chromium successfully installed globally for automation!');
+  } catch (error) {
+    spinner.stop('Warning: Failed to automatically download Chromium. Automation may not work until you run `npx puppeteer browsers install chrome`.');
+  }
+
   const mcpConfig = buildMcpConfig(endpointUrl, username, password);
   const options = { force: values.force };
 
