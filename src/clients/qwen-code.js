@@ -3,13 +3,12 @@ import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
 
-export async function configureZed(mcpConfig, options = {}) {
+export async function configureQwenCode(mcpConfig, options = {}) {
   const spinner = p.spinner();
-  spinner.start('Configuring Zed');
+  spinner.start('Configuring Qwen Code');
 
   try {
-    const configPath = path.join(os.homedir(), '.config', 'zed', 'settings.json');
-
+    const configPath = path.join(os.homedir(), '.qwen', 'settings.json');
     const configDir = path.dirname(configPath);
     await fs.mkdir(configDir, { recursive: true });
 
@@ -17,45 +16,44 @@ export async function configureZed(mcpConfig, options = {}) {
     try {
       const fileContent = await fs.readFile(configPath, 'utf8');
       if (fileContent.trim() !== '') {
-        // Strip out single-line and multi-line comments for JSON parsing
-        const stripped = fileContent.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-        existingConfig = JSON.parse(stripped);
+        existingConfig = JSON.parse(fileContent);
       }
     } catch (err) {
       if (err.code !== 'ENOENT') {
         spinner.stop('Error reading config file');
-        p.cancel(`Failed to parse existing config at ${configPath}. Please ensure it is valid JSON. Error: ${err.message}`);
+        p.cancel(`Failed to parse existing config at ${configPath}. Is it valid JSON? Error: ${err.message}`);
         process.exit(1);
       }
     }
 
-    if (!existingConfig.context_servers) {
-      existingConfig.context_servers = {};
+    if (!existingConfig.mcpServers) {
+      existingConfig.mcpServers = {};
     }
 
-    if (existingConfig.context_servers.blockish) {
+    if (existingConfig.mcpServers.blockish) {
       if (!options.force) {
         spinner.stop('Conflict');
         const overwrite = await p.confirm({
-          message: 'A "blockish" MCP server already exists in Zed. Overwrite?',
+          message: 'A "blockish" MCP server already exists in your config. Overwrite?',
           initialValue: false,
         });
         if (p.isCancel(overwrite) || !overwrite) {
           p.cancel('Operation cancelled.');
           process.exit(0);
         }
-              spinner.start('Updating config');
+        spinner.start('Updating config');
       }
     }
 
-    existingConfig.context_servers.blockish = mcpConfig;
+    existingConfig.mcpServers.blockish = mcpConfig;
 
     await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2), 'utf8');
 
     spinner.stop('Configuration successful');
     const { pathToFileURL } = await import('node:url');
     const displayPath = pathToFileURL(configPath).href;
-    p.outro(`Done! Updated Zed config: ${displayPath}\nPlease fully restart Zed.`);
+    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
+    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Qwen Code to load the new tools.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

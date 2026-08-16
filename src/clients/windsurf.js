@@ -1,68 +1,52 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
+import { hasBlockishMcp, mergeBlockishMcpJson } from '../utils/mcp-json.js';
+
+function getWindsurfConfigPaths() {
+  const homedir = os.homedir();
+  const root = process.platform === 'win32'
+    ? (process.env.USERPROFILE || homedir)
+    : homedir;
+
+  return [
+    path.join(root, '.codeium', 'windsurf', 'mcp_config.json'),
+    path.join(root, '.codeium', 'mcp_config.json'),
+  ];
+}
 
 export async function configureWindsurf(mcpConfig, options = {}) {
   const spinner = p.spinner();
-  spinner.start('Configuring Windsurf');
+  spinner.start('Configuring Devin (Windsurf)');
 
   try {
-    const platform = os.platform();
-    const homedir = os.homedir();
-    let configPath;
-    
-    if (platform === 'win32') {
-      const userProfile = process.env.USERPROFILE || homedir;
-      configPath = path.join(userProfile, '.codeium', 'windsurf', 'mcp_config.json');
-    } else {
-      configPath = path.join(homedir, '.codeium', 'windsurf', 'mcp_config.json');
+    const configPaths = getWindsurfConfigPaths();
+    let existed = false;
+    for (const configPath of configPaths) {
+      existed = (await hasBlockishMcp(configPath)) || existed;
     }
 
-    const configDir = path.dirname(configPath);
-    await fs.mkdir(configDir, { recursive: true });
-
-    let existingConfig = {};
-    try {
-      const fileContent = await fs.readFile(configPath, 'utf8');
-      if (fileContent.trim() !== '') {
-        existingConfig = JSON.parse(fileContent);
+    if (existed && !options.force) {
+      spinner.stop('Conflict');
+      const overwrite = await p.confirm({
+        message: 'A "blockish" MCP server already exists in Devin (Windsurf). Overwrite?',
+        initialValue: false,
+      });
+      if (p.isCancel(overwrite) || !overwrite) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
       }
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        spinner.stop('Error reading config file');
-        p.cancel(`Failed to parse existing config at ${configPath}. Error: ${err.message}`);
-        process.exit(1);
-      }
+      spinner.start('Updating config');
     }
 
-    if (!existingConfig.mcpServers) {
-      existingConfig.mcpServers = {};
+    for (const configPath of configPaths) {
+      await mergeBlockishMcpJson(configPath, mcpConfig);
     }
-
-    if (existingConfig.mcpServers.blockish) {
-      if (!options.force) {
-        spinner.stop('Conflict');
-        const overwrite = await p.confirm({
-          message: 'A "blockish" MCP server already exists in Windsurf. Overwrite?',
-          initialValue: false,
-        });
-        if (p.isCancel(overwrite) || !overwrite) {
-          p.cancel('Operation cancelled.');
-          process.exit(0);
-        }
-              spinner.start('Updating config');
-      }
-    }
-
-    existingConfig.mcpServers.blockish = mcpConfig;
-
-    await fs.writeFile(configPath, JSON.stringify(existingConfig, null, 2), 'utf8');
 
     spinner.stop('Configuration successful');
     const { pathToFileURL } = await import('node:url');
-    const displayPath = pathToFileURL(configPath).href;
-    p.outro(`Done! Updated Windsurf config: ${displayPath}\nPlease fully restart Windsurf.`);
+    const displayPaths = configPaths.map((configPath) => pathToFileURL(configPath).href).join('\n');
+    p.outro(`Done! Updated Devin (Windsurf) config:\n${displayPaths}\nPlease fully restart Devin.`);
   } catch (err) {
     spinner.stop('Failed to configure');
     p.cancel(`An error occurred: ${err.message}`);

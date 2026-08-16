@@ -6,13 +6,11 @@ import { configureCursor } from './clients/cursor.js';
 import { configureAntigravity } from './clients/antigravity.js';
 import { configureClaudeCode } from './clients/claude-code.js';
 import { configureCodex } from './clients/codex.js';
-import { configureChatGPT } from './clients/chatgpt.js';
 import { configureWindsurf } from './clients/windsurf.js';
-import { configureZed } from './clients/zed.js';
 import { configureCline } from './clients/cline.js';
-import { configureContinue } from './clients/continue.js';
-import { configureCody } from './clients/cody.js';
-import { configureGoose } from './clients/goose.js';
+import { configureTrae } from './clients/trae.js';
+import { configureQwenCode } from './clients/qwen-code.js';
+import { configureKimiCode } from './clients/kimi-code.js';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs/promises';
@@ -21,7 +19,6 @@ import { parseArgs } from 'node:util';
 const { values } = parseArgs({
   options: {
     tool: { type: 'string', short: 't' },
-    'cursor-level': { type: 'string' },
     siteUrl: { type: 'string', short: 's' },
     username: { type: 'string', short: 'u' },
     password: { type: 'string', short: 'p' },
@@ -38,19 +35,8 @@ const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8'));
 async function main() {
   p.intro(`Blockish MCP Server Configuration v${pkg.version}`);
 
-  const { tool, cursorLevel } = await askForTool(values);
+  const { tool } = await askForTool(values);
   const { endpointUrl, username, password } = await askForSiteDetails(values);
-  
-  const spinner = p.spinner();
-  spinner.start('Setting up Puppeteer for browser automation (downloading Chromium)...');
-  try {
-    const { execa } = await import('execa');
-    // Ensure Puppeteer and Chrome binaries are installed globally on the user's machine
-    await execa('npm', ['install', '-g', 'puppeteer'], { stdio: 'ignore' });
-    spinner.stop('Puppeteer and Chromium successfully installed globally for automation!');
-  } catch (error) {
-    spinner.stop('Warning: Failed to automatically download Chromium. Automation may not work until you run `npx puppeteer browsers install chrome`.');
-  }
 
   const mcpConfig = buildMcpConfig(endpointUrl, username, password);
   const options = { force: values.force };
@@ -60,13 +46,12 @@ async function main() {
       await configureClaudeDesktop(mcpConfig, options);
       break;
     case 'cursor':
-      await configureCursor(mcpConfig, cursorLevel, options);
+      await configureCursor(mcpConfig, options);
       break;
+    case 'antigravity':
     case 'antigravity-ide':
-      await configureAntigravity(mcpConfig, 'ide', options);
-      break;
     case 'antigravity-cli':
-      await configureAntigravity(mcpConfig, 'cli', options);
+      await configureAntigravity(mcpConfig, 'ide', options);
       break;
     case 'antigravity-chat':
       await configureAntigravity(mcpConfig, 'chat', options);
@@ -77,26 +62,21 @@ async function main() {
     case 'codex':
       await configureCodex(mcpConfig, options);
       break;
-    case 'chatgpt':
-      await configureChatGPT(mcpConfig, options);
-      break;
+    case 'devin':
     case 'windsurf':
       await configureWindsurf(mcpConfig, options);
-      break;
-    case 'zed':
-      await configureZed(mcpConfig, options);
       break;
     case 'cline':
       await configureCline(mcpConfig, options);
       break;
-    case 'continue':
-      await configureContinue(mcpConfig, options);
+    case 'trae':
+      await configureTrae(mcpConfig, options);
       break;
-    case 'cody':
-      await configureCody(mcpConfig, options);
+    case 'qwen-code':
+      await configureQwenCode(mcpConfig, options);
       break;
-    case 'goose':
-      await configureGoose(mcpConfig, options);
+    case 'kimi-code':
+      await configureKimiCode(mcpConfig, options);
       break;
     default:
       p.cancel('Unknown tool selected.');

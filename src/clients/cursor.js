@@ -3,17 +3,12 @@ import path from 'node:path';
 import os from 'node:os';
 import * as p from '@clack/prompts';
 
-export async function configureCursor(mcpConfig, cursorLevel, options = {}) {
+export async function configureCursor(mcpConfig, options = {}) {
   const spinner = p.spinner();
   spinner.start('Configuring Cursor');
 
   try {
-    let configPath;
-    if (cursorLevel === 'global') {
-      configPath = path.join(os.homedir(), '.cursor', 'mcp.json');
-    } else {
-      configPath = path.join(process.cwd(), '.cursor', 'mcp.json');
-    }
+    const configPath = path.join(os.homedir(), '.cursor', 'mcp.json');
 
     const configDir = path.dirname(configPath);
     await fs.mkdir(configDir, { recursive: true });

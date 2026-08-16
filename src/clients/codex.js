@@ -1,73 +1,92 @@
-import { execa } from 'execa';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
 import * as p from '@clack/prompts';
+
+function tomlQuote(value) {
+  return JSON.stringify(String(value));
+}
+
+function buildBlockishToml(mcpConfig) {
+  return `[mcp_servers.blockish]
+command = "npx"
+args = [
+    "-y",
+    "@automattic/mcp-wordpress-remote@latest"
+]
+
+[mcp_servers.blockish.env]
+WP_API_URL = ${tomlQuote(mcpConfig.env.WP_API_URL)}
+WP_API_USERNAME = ${tomlQuote(mcpConfig.env.WP_API_USERNAME)}
+WP_API_PASSWORD = ${tomlQuote(mcpConfig.env.WP_API_PASSWORD)}
+`;
+}
+
+function upsertBlockish(content, mcpConfig) {
+  const block = buildBlockishToml(mcpConfig).trimEnd();
+  const existing = /\[mcp_servers\.blockish\][\s\S]*?(?=\n\[(?!mcp_servers\.blockish)|$)/;
+
+  if (existing.test(content)) {
+    return content.replace(existing, `${block}\n`);
+  }
+
+  const customMarker = '# --- Custom External MCP Servers ---';
+  if (content.includes(customMarker)) {
+    return content.replace(customMarker, `${customMarker}\n${block}\n`);
+  }
+
+  if (content.includes('[mcp_servers]')) {
+    return content.replace('[mcp_servers]', `[mcp_servers]\n\n${block}`);
+  }
+
+  return `${content.trimEnd()}\n\n${block}\n`;
+}
 
 export async function configureCodex(mcpConfig, options = {}) {
   const spinner = p.spinner();
   spinner.start('Configuring Codex');
 
   try {
-    const url = mcpConfig.env.WP_API_URL;
-    const user = mcpConfig.env.WP_API_USERNAME;
-    const pass = mcpConfig.env.WP_API_PASSWORD;
+    const configPath = path.join(os.homedir(), '.codex', 'config.toml');
+    await fs.mkdir(path.dirname(configPath), { recursive: true });
 
-    const addArgs = [
-      'mcp', 'add', 'blockish',
-      'npx', '-y', '@automattic/mcp-wordpress-remote@latest',
-      '--env', `WP_API_URL=${url}`,
-      '--env', `WP_API_USERNAME=${user}`,
-      '--env', `WP_API_PASSWORD=${pass}`
-    ];
-
-    if (options.force) {
-      try { await execa('codex', ['mcp', 'remove', 'blockish']); } catch (e) { /* ignore */ }
-    }
-
+    let content = '';
     try {
-      await execa('codex', addArgs);
+      content = await fs.readFile(configPath, 'utf8');
     } catch (err) {
-      const errorStr = (err.stderr || '') + (err.stdout || '') + (err.message || '');
-      if (errorStr.toLowerCase().includes('already exist')) {
-        if (!options.force) {
-          spinner.stop('Conflict');
-          const overwrite = await p.confirm({
-            message: 'A "blockish" MCP server already exists in Codex. Overwrite?',
-            initialValue: false,
-          });
-          if (p.isCancel(overwrite) || !overwrite) {
-            p.cancel('Operation cancelled.');
-            process.exit(0);
-          }
-          spinner.start('Updating config');
-        }
-        await execa('codex', ['mcp', 'remove', 'blockish']);
-        await execa('codex', addArgs);
-      } else {
+      if (err.code !== 'ENOENT') {
         throw err;
       }
     }
 
-    spinner.stop('Configuration successful');
-    p.note('Your application password is stored in your Codex config.\nTreat it as a secret.', 'Security Warning');
-    p.outro('Done! Updated config: ~/.codex/config.toml\nPlease fully restart Codex to load the new tools.');
-  } catch (err) {
-    spinner.stop('Failed to configure automatically');
-    if (err.code === 'ENOENT' || err.message.includes('not found') || (err.stderr && err.stderr.includes('command not found'))) {
-      p.log.warn('The "codex" command was not found on your system.');
-    } else {
-      p.log.warn(`An error occurred: ${err.message}`);
+    const existed = /\[mcp_servers\.blockish\]/.test(content);
+    if (existed && !options.force) {
+      spinner.stop('Conflict');
+      const overwrite = await p.confirm({
+        message: 'A "blockish" MCP server already exists in your Codex config. Overwrite?',
+        initialValue: false,
+      });
+      if (p.isCancel(overwrite) || !overwrite) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+      spinner.start('Updating config');
     }
 
-    const tomlBlock = `
-[mcpServers.blockish]
-command = "npx"
-args = ["-y", "@automattic/mcp-wordpress-remote@latest"]
-[mcpServers.blockish.env]
-WP_API_URL = "${mcpConfig.env.WP_API_URL}"
-WP_API_USERNAME = "${mcpConfig.env.WP_API_USERNAME}"
-WP_API_PASSWORD = "${mcpConfig.env.WP_API_PASSWORD}"
-`;
+    const next = content.trim() === ''
+      ? `${buildBlockishToml(mcpConfig)}\n`
+      : upsertBlockish(content, mcpConfig);
 
-    p.note(`Please append the following block to your ~/.codex/config.toml manually:\n${tomlBlock}`, 'Manual Configuration');
-    p.outro('After adding the config, restart Codex.');
+    await fs.writeFile(configPath, next, 'utf8');
+
+    spinner.stop('Configuration successful');
+    const { pathToFileURL } = await import('node:url');
+    const displayPath = pathToFileURL(configPath).href;
+    p.note(`Your application password is stored in plaintext in the config file.\nTreat this file as a secret:\n${displayPath}`, 'Security Warning');
+    p.outro(`Done! Updated config: ${displayPath}\nPlease fully restart Codex / ChatGPT to load the new tools.`);
+  } catch (err) {
+    spinner.stop('Failed to configure');
+    p.cancel(`An error occurred: ${err.message}`);
+    process.exit(1);
   }
 }

@@ -6,18 +6,19 @@ This tool interactively collects your WordPress connection details and automatic
 
 ## Supported AI Clients
 
+Clients that reliably run **local stdio MCP tools** (the setup Blockish uses):
+
+- **Cursor**
 - **Claude Desktop**
-- **Cursor** (Global or Project-level)
-- **Windsurf IDE**
-- **Zed Editor**
-- **Cline** (VS Code)
-- **Continue.dev**
-- **Sourcegraph Cody**
-- **Goose**
-- **Antigravity IDE** / **CLI** / **Chat**
 - **Claude Code**
 - **Codex**
-- **ChatGPT Desktop**
+- **Devin (Windsurf)**
+- **Antigravity** (IDE and CLI share `~/.gemini/config/mcp_config.json`)
+- **Antigravity Chat** (`~/.gemini/antigravity/mcp_config.json`)
+- **Cline** (VS Code)
+- **Trae**
+- **Qwen Code**
+- **Kimi Code**
 
 ## Usage
 
@@ -41,31 +42,29 @@ You can completely bypass the interactive prompts by passing your details via co
 
 | Flag | Full Name | Description |
 | :--- | :--- | :--- |
-| `-t` | `--tool` | The AI client identifier (e.g., `cline`, `windsurf`, `cursor`, `zed`, `goose`, `continue`, `cody`) |
+| `-t` | `--tool` | The AI client identifier (`cursor`, `claude-desktop`, `claude-code`, `codex`, `devin`, `antigravity`, `antigravity-chat`, `cline`, `trae`, `qwen-code`, `kimi-code`) |
 | `-s` | `--siteUrl` | The base URL of your WordPress site |
 | `-u` | `--username` | Your WordPress username |
 | `-p` | `--password` | Your Application Password |
 | `-c` | `--customUrl` | Optional custom endpoint URL override |
 | `-f` | `--force` | Skip the "Overwrite?" confirmation if a configuration already exists |
-| | `--cursor-level` | `global` or `project` (Used only when `-t cursor` is selected) |
 
 **Example:**
 ```bash
-npx blockish-mcp-cli -t cline -s https://example.com -u admin -p "secretpass123" --force
+npx blockish-mcp-cli -t cursor -s https://example.com -u admin -p "secretpass123" --force
 ```
 
 ## Security Warning
 
-Your Application Password is required to authenticate your AI client with your WordPress site. This CLI tool safely writes this password into the configuration files of the AI client you select. 
+Your Application Password is required to authenticate your AI client with your WordPress site. This CLI tool safely writes this password into the configuration files of the AI client you select.
 
 > **Important:** The configuration files are stored locally on your machine in plaintext. Treat these configuration files as sensitive secrets.
 
 ## How it works under the hood
 
-Depending on your selected AI client, this CLI uses one of three approaches:
-1. **JSON Config Merging:** For tools like Claude Desktop, Cursor, and Antigravity, the CLI safely parses the client's local JSON configuration file and merges the MCP server details into the `mcpServers` object without overwriting your existing tools.
-2. **Command Spawning:** For tools like Claude Code and Codex, the CLI executes their respective native configuration commands (e.g. `claude mcp add`) to add the server. If the native CLI is not found on your system, it provides a handy copy-paste fallback block for manual configuration.
-3. **Manual Instructions:** For ChatGPT Desktop, which requires a remote HTTPS URL rather than a local configuration file, the CLI outputs clear copy-paste instructions for adding the server directly inside the ChatGPT app settings.
+Depending on your selected AI client, this CLI uses one of two approaches:
+1. **JSON Config Merging:** For tools like Claude Desktop, Cursor, Devin (Windsurf), Cline, Antigravity, Trae, Qwen Code, and Kimi Code, the CLI safely parses the client's local JSON configuration file and merges the MCP server details into the `mcpServers` object without overwriting your existing tools.
+2. **Command Spawning:** For Claude Code and Codex, the CLI executes their native configuration commands (e.g. `claude mcp add`) to add the server. If the native CLI is not found on your system, it provides a copy-paste fallback block for manual configuration.
 
 ## License
 
