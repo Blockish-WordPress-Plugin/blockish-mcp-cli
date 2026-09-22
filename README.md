@@ -12,6 +12,8 @@ Clients that reliably run **local stdio MCP tools** (the setup Blockish uses):
 - **Claude Desktop**
 - **Claude Code**
 - **Codex**
+- **Command Code**
+- **OpenCode** (`~/.config/opencode/opencode.json`, or `$XDG_CONFIG_HOME/opencode/opencode.json`)
 - **Devin (Windsurf)**
 - **Antigravity** (IDE and CLI share `~/.gemini/config/mcp_config.json`)
 - **Antigravity Chat** (`~/.gemini/antigravity/mcp_config.json`)
@@ -42,7 +44,7 @@ You can completely bypass the interactive prompts by passing your details via co
 
 | Flag | Full Name | Description |
 | :--- | :--- | :--- |
-| `-t` | `--tool` | The AI client identifier (`cursor`, `claude-desktop`, `claude-code`, `codex`, `devin`, `antigravity`, `antigravity-chat`, `cline`, `trae`, `qwen-code`, `kimi-code`) |
+| `-t` | `--tool` | The AI client identifier (`cursor`, `claude-desktop`, `claude-code`, `codex`, `command-code`, `opencode`, `devin`, `antigravity`, `antigravity-chat`, `cline`, `trae`, `qwen-code`, `kimi-code`) |
 | `-s` | `--siteUrl` | The base URL of your WordPress site |
 | `-u` | `--username` | Your WordPress username |
 | `-p` | `--password` | Your Application Password |
@@ -63,7 +65,7 @@ Your Application Password is required to authenticate your AI client with your W
 ## How it works under the hood
 
 Depending on your selected AI client, this CLI uses one of two approaches:
-1. **JSON Config Merging:** For tools like Claude Desktop, Cursor, Devin (Windsurf), Cline, Antigravity, Trae, Qwen Code, and Kimi Code, the CLI safely parses the client's local JSON configuration file and merges the MCP server details into the `mcpServers` object without overwriting your existing tools.
+1. **JSON Config Merging:** For tools like Claude Desktop, Cursor, Command Code, OpenCode, Devin (Windsurf), Cline, Antigravity, Trae, Qwen Code, and Kimi Code, the CLI safely parses the client's local JSON configuration file and merges the MCP server details into the client's server object (the `mcpServers` object, or `mcp` for OpenCode) without overwriting your existing tools.
 2. **Command Spawning:** For Claude Code and Codex, the CLI executes their native configuration commands (e.g. `claude mcp add`) to add the server. If the native CLI is not found on your system, it provides a copy-paste fallback block for manual configuration.
 
 ## License

@@ -6,6 +6,8 @@ import { configureCursor } from './clients/cursor.js';
 import { configureAntigravity } from './clients/antigravity.js';
 import { configureClaudeCode } from './clients/claude-code.js';
 import { configureCodex } from './clients/codex.js';
+import { configureCommandCode } from './clients/command-code.js';
+import { configureOpenCode } from './clients/opencode.js';
 import { configureWindsurf } from './clients/windsurf.js';
 import { configureCline } from './clients/cline.js';
 import { configureTrae } from './clients/trae.js';
@@ -61,6 +63,12 @@ async function main() {
       break;
     case 'codex':
       await configureCodex(mcpConfig, options);
+      break;
+    case 'command-code':
+      await configureCommandCode(mcpConfig, options);
+      break;
+    case 'opencode':
+      await configureOpenCode(mcpConfig, options);
       break;
     case 'devin':
     case 'windsurf':

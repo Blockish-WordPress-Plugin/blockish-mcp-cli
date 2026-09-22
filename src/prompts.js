@@ -10,6 +10,8 @@ export async function askForTool(prefilled = {}) {
       { value: 'claude-desktop', label: 'Claude Desktop' },
       { value: 'claude-code', label: 'Claude Code' },
       { value: 'codex', label: 'Codex' },
+      { value: 'command-code', label: 'Command Code' },
+      { value: 'opencode', label: 'OpenCode' },
       { value: 'devin', label: 'Devin (Windsurf)' },
       { value: 'antigravity', label: 'Antigravity' },
       { value: 'antigravity-chat', label: 'Antigravity Chat' },
